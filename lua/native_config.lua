@@ -31,64 +31,63 @@ end)
 
 -- 下方是与windows互通剪切板的配置，能用但有些小bug，不是+，*寄存器才触发
 -- 配置 win32yank 剪贴板接口
-local copy = function(lines, _)
-  local text = table.concat(lines, '\n')
-  vim.fn.system('win32yank.exe -i', text)
+if vim.fn.has 'wsl' == 1 then
+  local copy = function(lines, _)
+    local text = table.concat(lines, '\n')
+    vim.fn.system('win32yank.exe -i', text)
+  end
+
+  local paste = function()
+    local output = vim.fn.system 'win32yank.exe -o'
+    return vim.split(output, '\n', { trimempty = true })
+  end
+
+  -- 注册剪贴板提供器
+  global.clipboard = {
+    name = 'win32yank',
+    copy = {
+      ['+'] = copy,
+      ['*'] = copy,
+    },
+    paste = {
+      ['+'] = paste,
+      ['*'] = paste,
+    },
+  }
 end
 
-local paste = function()
-  local output = vim.fn.system 'win32yank.exe -o'
-  return vim.split(output, '\n', { trimempty = true })
-end
-
--- 注册剪贴板提供器
-global.clipboard = {
-  name = 'win32yank',
-  copy = {
-    ['+'] = copy,
-    ['*'] = copy,
-  },
-  paste = {
-    ['+'] = paste,
-    ['*'] = paste,
-  },
-}
-
--- Enable break indent
+-- 折叠行时，视觉上与起始行保持相同缩进
 option.breakindent = true
 
 -- Save undo history
 option.undofile = true
 
--- Case-insensitive searching UNLESS \C or one or more capital letters in the search term
-option.ignorecase = true
+-- 查找时开启智能大小写匹配
 option.smartcase = true
 
--- Keep signcolumn on by default
+-- 最左侧的两列，可以用来打断点，或者其他用途
 option.signcolumn = 'yes'
 
--- Decrease update time
+-- 可以理解为事件响应时间
 option.updatetime = 250
 
--- Decrease mapped sequence wait time
--- Displays which-key popup sooner
+-- 序列超时时间，超时展示which-key
 option.timeoutlen = 300
 
--- Configure how new splits should be opened
+-- 分割窗口时，新窗口在哪个方向，右和下
 option.splitright = true
 option.splitbelow = true
 
--- Sets how neovim will display certain whitespace characters in the editor.
---  See `:help 'list'`
---  and `:help 'listchars'`
+-- 打开空白图表显示
 option.list = true
+-- tab显示为>>加一个空格，多余空格展示为·，不间断空格为␣
 option.listchars = { tab = '» ', trail = '·', nbsp = '␣' }
 
--- Preview substitutions live, as you type!
+-- 使用替换命令时，实时预览替换结果
 option.inccommand = 'split'
 
--- Show which line your cursor is on
+-- 光标所在行高亮
 option.cursorline = true
 
--- Minimal number of screen lines to keep above and below the cursor.
+-- 光标不距离上下边缘10行
 option.scrolloff = 10
