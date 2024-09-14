@@ -17,23 +17,42 @@ global.maplocalleader = ' '
 global.have_nerd_font = true
 -- 下面是options的配
 option.number = true
--- You can also add relative line numbers, to help with jumping.
---  Experiment for yourself to see if you like it!
--- option.relativenumber = true
 
--- Enable mouse mode, can be useful for resizing splits for example!
+-- 所有模式都允许使用鼠标
 option.mouse = 'a'
 
--- Don't show the mode, since it's already in the status line
+-- 不显示当前模式，因为status line已经显示了
 option.showmode = false
 
--- Sync clipboard between OS and Neovim.
---  Schedule the setting after `UiEnter` because it can increase startup-time.
---  Remove this option if you want your OS clipboard to remain independent.
---  See `:help 'clipboard'`
+-- 与系统剪切板互通
 vim.schedule(function()
   option.clipboard = 'unnamedplus'
 end)
+
+-- 下方是与windows互通剪切板的配置，能用但有些小bug，不是+，*寄存器才触发
+-- 配置 win32yank 剪贴板接口
+local copy = function(lines, _)
+  local text = table.concat(lines, '\n')
+  vim.fn.system('win32yank.exe -i', text)
+end
+
+local paste = function()
+  local output = vim.fn.system 'win32yank.exe -o'
+  return vim.split(output, '\n', { trimempty = true })
+end
+
+-- 注册剪贴板提供器
+global.clipboard = {
+  name = 'win32yank',
+  copy = {
+    ['+'] = copy,
+    ['*'] = copy,
+  },
+  paste = {
+    ['+'] = paste,
+    ['*'] = paste,
+  },
+}
 
 -- Enable break indent
 option.breakindent = true
